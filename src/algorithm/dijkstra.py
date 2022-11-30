@@ -14,20 +14,19 @@ def update_min_distance(
         current_distance = distance.get(node.id, MAXSIZE)
         for edge in src_graph.edges:
             if min_distance > (edge.weight + current_distance):
-                if (
-                    edge.node_a.id == node.id
-                    and edge.node_b.id not in dst_graph.nodes_id
-                ):
+                if edge.node_a == node and edge.node_b.id not in dst_graph.nodes_id:
                     node_involved = edge.node_b
                     edge_involved = edge.copy()
                     min_distance = edge.weight + current_distance
                 if (
                     not edge.is_oriented
-                    and edge.node_b.id == node.id
+                    and edge.node_b == node
                     and edge.node_a.id not in dst_graph.nodes_id
                 ):
                     node_involved = edge.node_a
                     edge_involved = edge.copy()
+                    edge_involved.node_a = edge.node_b
+                    edge_involved.node_b = edge.node_a
                     min_distance = edge.weight + current_distance
 
     if node_involved is not None and edge_involved is not None:
@@ -49,7 +48,7 @@ def dijkstra(
     distance[parsed_start_node.id] = 0
 
     dst_graph = Graph(f"{src_graph.id}.{time()}", [start_node], [])
-    for _ in src_graph.nodes:
+    for _ in range(len(src_graph.nodes) - 1):
         update_min_distance(src_graph, dst_graph, distance)
 
     return (dst_graph, distance)

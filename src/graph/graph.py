@@ -1,9 +1,10 @@
 from .node import Node
 from .edge import Edge
-from typing import Any, Sequence
+from typing import Any, Sequence, Self
+import networkx as nx
 
 
-class Graph(Node):
+class Graph(Node, object):
     def __init__(
         self,
         id: str,
@@ -15,6 +16,7 @@ class Graph(Node):
         ] = [],
     ) -> None:
         super().__init__(id)
+
         parsed_nodes: list[Node] = [
             Node(node) if isinstance(node, str) else node for node in nodes
         ]
@@ -73,10 +75,38 @@ class Graph(Node):
         self._validate_edge(edge)
         self._edges.append(edge)
 
+    def to_networkx(self, oriented: bool = False) -> Any:
+        if oriented:
+            nx_graph = nx.DiGraph()
+        else:
+            nx_graph = nx.Graph()
+
+        for edge in self._edges:
+            nx_graph.add_edge(edge.node_a.id, edge.node_b.id, weight=edge.weight)
+
+        return nx_graph
+
+    def draw(self, optimized: bool = False) -> None:
+        nx_graph = self.to_networkx(oriented=optimized)
+
+        fixed_pos: dict[str, tuple[float, float]] = {}
+
+        x_coord = 0
+        for node, index in zip(self._nodes, range(len(self._nodes))):
+            if index % 2 == 0:
+                fixed_pos[node.id] = (x_coord, 1)
+            else:
+                fixed_pos[node.id] = (x_coord, 2)
+                x_coord += 1
+
+        pos = nx.spring_layout(nx_graph, pos=fixed_pos, fixed=fixed_pos.keys())
+        # pos = nx.spring_layout(nx_graph)
+        nx.draw_networkx(nx_graph, pos, node_size=600, with_labels=True)
+
+        edge_labels = nx.get_edge_attributes(nx_graph, "weight")
+        nx.draw_networkx_edge_labels(nx_graph, pos, edge_labels=edge_labels)
+
     def _validate_edge(self, edge: Edge) -> None:
         assert (
             edge.node_a in self._nodes and edge.node_b in self._nodes
         ), f"Edge {str(edge)} isn't in the node list"
-
-    def __new__(cls: type["Graph"], *args: Any, **kawgs: Any) -> "Graph":
-        return object.__new__(cls)

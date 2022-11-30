@@ -1,2 +1,2 @@
-from .AS import *
-from .bgp import *
+from .AS import AS
+from .bgp import BGP

@@ -1,2 +1,2 @@
-from .dijkstra import *
-from .bellman_ford import *
+from .dijkstra import dijkstra
+from .bellman_ford import bellman_ford

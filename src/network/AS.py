@@ -1,18 +1,21 @@
 from src.graph import Node, DynamicGraph, Graph, EdgeSubscriptionEnum, Edge
 from src.algorithm import dijkstra
+from typing import Sequence, Self
+import networkx as nx
+import matplotlib.pyplot as plt
 
 
 class AS(DynamicGraph):
     def __init__(
         self,
         id: str,
-        nodes: list[Node | str],
-        gateway_nodes: list[Node | str],
-        edges: list[
+        nodes: Sequence[Node | str | Graph],
+        edges: Sequence[
             Edge
             | tuple[Node | str, Node | str, float, bool]
             | tuple[Node | str, Node | str, float]
         ] = [],
+        gateway_nodes: Sequence[Node | str] = [],
     ) -> None:
         super().__init__(id, nodes, edges)
         parsed_gateway_nodes: list[Node] = [
@@ -30,12 +33,27 @@ class AS(DynamicGraph):
     def gateway_nodes(self) -> list[Node]:
         return self._gateway_nodes
 
-    def __edge_subscription(self, type: EdgeSubscriptionEnum, edge: Edge) -> None:
+    @property
+    def dijkstra_per_gateway(self) -> dict[str, tuple[Graph, dict[str, float]]]:
+        return self._dijkstra_per_gateway
+
+    def draw(self, optimized: bool = False) -> None:
+        if not optimized:
+            return super().draw(optimized)
+
+        grid_size = len(self._dijkstra_per_gateway.keys())
+        plot_counter = 1
+        for [graph, _] in self._dijkstra_per_gateway.values():
+            plt.subplot(grid_size, grid_size // 2, plot_counter)
+            plot_counter += 1
+            graph.draw(optimized)
+
+    def _edge_subscription(self, type: EdgeSubscriptionEnum, edge: Edge) -> None:
         if type == EdgeSubscriptionEnum.WEIGHT:
             self.__calc_dijkstra_per_gateway()
 
     def add_edge(self, edge: Edge) -> None:
-        edge.subscriber = self.__edge_subscription
+        edge.subscriber = self._edge_subscription
         return super().add_edge(edge)
 
     def __calc_dijkstra_per_gateway(self) -> None:

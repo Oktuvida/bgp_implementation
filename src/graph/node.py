@@ -1,6 +1,3 @@
-node_instances: dict[str, "Node"] = {}
-
-
 class Node(object):
     def __init__(self, id: str) -> None:
         self._id = id
@@ -12,7 +9,10 @@ class Node(object):
     def __str__(self) -> str:
         return self._id
 
-    def __new__(cls: type["Node"], id: str) -> "Node":
-        if node_instances.get(id) is None:
-            node_instances[id] = super().__new__(cls)
-        return node_instances[id]
+    def __hash__(self) -> int:
+        return hash(self.id)
+
+    def __eq__(self, __o: "Node") -> bool:
+        if type(__o) != self.__class__:
+            return False
+        return self._id == __o._id

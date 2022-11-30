@@ -2,6 +2,7 @@ from .node import Node
 from typing import Callable, Any
 from enum import Enum
 from copy import copy
+from src.utils import Priority
 
 
 class EdgeSubscriptionEnum(Enum):
@@ -18,6 +19,7 @@ class Edge:
         node_b: Node | str,
         weight: float,
         is_oriented: bool = False,
+        policy: Priority = Priority.LOW,
         subscriber: Callable[[EdgeSubscriptionEnum, "Edge"], Any] | None = None,
     ) -> None:
         if isinstance(node_a, str):
@@ -29,6 +31,7 @@ class Edge:
         self._node_b = node_b
         self._weight = weight
         self._is_oriented = is_oriented
+        self._policy = policy
         self._subscriber = subscriber
 
     @property
@@ -57,7 +60,7 @@ class Edge:
 
     @weight.setter
     def weight(self, new_value: float) -> None:
-        self._weight = new_value
+        self._weight = round(new_value, 3)
         if self._subscriber is not None:
             self._subscriber(EdgeSubscriptionEnum.WEIGHT, self)
 
@@ -70,6 +73,10 @@ class Edge:
         self._is_oriented = new_value
         if self._subscriber is not None:
             self._subscriber(EdgeSubscriptionEnum.IS_ORIENTED, self)
+
+    @property
+    def policy(self) -> Priority:
+        return self._policy
 
     @property
     def subscriber(self) -> Callable[[EdgeSubscriptionEnum, "Edge"], Any] | None:
@@ -90,3 +97,16 @@ class Edge:
 
     def copy(self) -> "Edge":
         return copy(self)
+
+    def __hash__(self) -> int:
+        return hash((self._node_a, self._node_b, self._weight, self._is_oriented))
+
+    def __eq__(self, __o: "Edge") -> bool:
+        if type(__o) is not self.__class__:
+            return False
+
+        return (
+            self._node_a == __o.node_a
+            and self._node_b == __o.node_b
+            and self._weight == __o.weight
+        )
