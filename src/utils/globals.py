@@ -1,5 +1,6 @@
-from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 
 
 class Globals:
-    SCHED = BlockingScheduler()
+    SCHED = BackgroundScheduler()
+    DRAW_TIMER: float = 1
